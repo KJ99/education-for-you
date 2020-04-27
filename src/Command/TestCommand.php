@@ -4,7 +4,7 @@ namespace App\Command;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use App\Service\LessonService;
+use App\Service\StudentGroupService;
 use App\Entity\Picture;
 use App\Entity\Subject;
 use App\Service\FileService;
@@ -25,7 +25,7 @@ class TestCommand extends Command
     private $service;
     private $em;
 
-    public function __construct(LessonService $service, EntityManagerInterface $em) {
+    public function __construct(StudentGroupService $service, EntityManagerInterface $em) {
         $this->service = $service;
         $this->em = $em;
         parent::__construct();
@@ -41,6 +41,15 @@ class TestCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $user = $this->em->getRepository(User::class)->findOneBy(['id' => 130]);
+        $level = $this->em->getRepository(Level::class)->findOneBy(['id' => 1]);
+
+        $data = [
+
+        ];
+
+        $res = $this->service->create($user, $level, $data);
+        dump($data);
         return 0;
     }
 }
