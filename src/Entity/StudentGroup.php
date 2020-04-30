@@ -71,12 +71,18 @@ class StudentGroup
      */
     private $liveLessons;
 
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\GroupInviteToken", mappedBy="studentGroup", orphanRemoval=true)
+     */
+    private $inviteTokens;
+
 
     public function __construct()
     {
         $this->students = new ArrayCollection();
         $this->joinRequests = new ArrayCollection();
         $this->liveLessons = new ArrayCollection();
+        $this->inviteTokens = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -250,6 +256,37 @@ class StudentGroup
             // set the owning side to null (unless already changed)
             if ($liveLesson->getStudentGroup() === $this) {
                 $liveLesson->setStudentGroup(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|GroupInviteToken[]
+     */
+    public function getInviteTokens(): Collection
+    {
+        return $this->inviteTokens;
+    }
+
+    public function addInviteToken(GroupInviteToken $inviteToken): self
+    {
+        if (!$this->inviteTokens->contains($inviteToken)) {
+            $this->inviteTokens[] = $inviteToken;
+            $inviteToken->setStudentGroup($this);
+        }
+
+        return $this;
+    }
+
+    public function removeInviteToken(GroupInviteToken $inviteToken): self
+    {
+        if ($this->inviteTokens->contains($inviteToken)) {
+            $this->inviteTokens->removeElement($inviteToken);
+            // set the owning side to null (unless already changed)
+            if ($inviteToken->getStudentGroup() === $this) {
+                $inviteToken->setStudentGroup(null);
             }
         }
 

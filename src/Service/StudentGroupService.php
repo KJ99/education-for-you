@@ -5,10 +5,12 @@ use App\Entity\StudentGroup;
 use App\Entity\User;
 use App\Entity\Level;
 use App\Entity\GroupJoinRequest;
+use App\Entity\GroupInviteToken;
 use App\Entity\LiveLesson;
 
 use App\Result\StudentGroupResult;
 use App\Result\GroupRequestResult;
+use App\Result\GroupInviteTokenResult;
 use App\Result\LiveLessonResult;
 
 use App\Exception\EduException;
@@ -36,11 +38,11 @@ class StudentGroupService extends EntityService {
         parent::__construct($em);
     }
 
-    public function create(User $user, Level $level, array $data) : StudentGroupResult {
+    public function create(User $user, array $data) : StudentGroupResult {
         $result = new StudentGroupResult();
         try {
-            $lesson = $this->processor->processCreation($user, $level, $data);
-            $result->setSuccess(true)->setData($lesson);
+            $group = $this->groupProcessor->processCreation($user, $data);
+            $result->setSuccess(true)->setData($group);
         } catch(EduException $e) {
             $result->setSuccess(false)->setError($e);
         }
@@ -50,8 +52,8 @@ class StudentGroupService extends EntityService {
     public function update(User $user, StudentGroup $group, array $data) : StudentGroupResult {
         $result = new StudentGroupResult();
         try {
-            $lesson = $this->processor->processUpdate($user, $group, $data);
-            $result->setSuccess(true)->setData($lesson);
+            $group = $this->groupProcessor->processUpdate($user, $group, $data);
+            $result->setSuccess(true)->setData($group);
         } catch(EduException $e) {
             $result->setSuccess(false)->setError($e);
         }
@@ -61,7 +63,128 @@ class StudentGroupService extends EntityService {
     public function delete(User $user, StudentGroup $group) : StudentGroupResult {
         $result = new StudentGroupResult();
         try {
-            $lesson = $this->processor->processDeletion($user, $group);
+            $group = $this->groupProcessor->processDeletion($user, $group);
+            $result->setSuccess(true)->setData($group);
+        } catch(EduException $e) {
+            $result->setSuccess(false)->setError($e);
+        }
+        return $result;
+    }
+
+    public function join(User $user, StudentGroup $group) : GroupRequestResult {
+        $result = new GroupRequestResult();
+        try {
+            $request = $this->joinProcessor->processJoinAttempt($user, $group);
+            $result->setSuccess(true)->setData($request);
+        } catch(EduException $e) {
+            $result->setSuccess(false)->setError($e);
+        }
+        return $result;
+    }
+
+    public function acceptRequest(User $user, GroupJoinRequest $request) : GroupRequestResult {
+        $result = new GroupRequestResult();
+        try {
+            $request = $this->joinProcessor->processJoinRequestAccept($user, $request);
+            $result->setSuccess(true)->setData($request);
+        } catch(EduException $e) {
+            $result->setSuccess(false)->setError($e);
+        }
+        return $result;
+    }
+
+    public function declineRequest(User $user, GroupJoinRequest $request) : GroupRequestResult {
+        $result = new GroupRequestResult();
+        try {
+            $request = $this->joinProcessor->processJoinRequestDecline($user, $request);
+            $result->setSuccess(true)->setData($request);
+        } catch(EduException $e) {
+            $result->setSuccess(false)->setError($e);
+        }
+        return $result;
+    }
+
+    public function cancelRequest(User $user, GroupJoinRequest $request) : GroupRequestResult {
+        $result = new GroupRequestResult();
+        try {
+            $request = $this->joinProcessor->processRequestCancelation($user, $request);
+            $result->setSuccess(true)->setData($request);
+        } catch(EduException $e) {
+            $result->setSuccess(false)->setError($e);
+        }
+        return $result;
+    }
+
+    public function createInviteToken(User $user, StudentGroup $group) : GroupInviteTokenResult {
+        $result = new GroupInviteTokenResult();
+        try {
+            $token = $this->joinProcessor->processInviteTokenCreation($user, $group);
+            $result->setSuccess(true)->setData($token);
+        } catch(EduException $e) {
+            $result->setSuccess(false)->setError($e);
+        }
+        return $result;
+    }
+
+    public function joinGroupWithToken(User $user, string $token) : GroupInviteTokenResult {
+        $result = new GroupInviteTokenResult();
+        try {
+            $token = $this->joinProcessor->processInviteTokenUse($user, $token);
+            $result->setSuccess(true)->setData($token);
+        } catch(EduException $e) {
+            $result->setSuccess(false)->setError($e);
+        }
+        return $result;
+    }
+
+    public function deleteInviteToken(User $user, GroupInviteToken $token) : GroupInviteTokenResult {
+        $result = new GroupInviteTokenResult();
+        try {
+            $token = $this->joinProcessor->processInviteTokenDeletion($user, $token);
+            $result->setSuccess(true)->setData($token);
+        } catch(EduException $e) {
+            $result->setSuccess(false)->setError($e);
+        }
+        return $result;
+    }
+
+    public function createLiveLesson(User $user, StudentGroup $group, array $data) : LiveLessonResult {
+        $result = new LiveLessonResult();
+        try {
+            $lesson = $this->liveLessonProcessor->processCreation($user, $group, $data);
+            $result->setSuccess(true)->setData($lesson);
+        } catch(EduException $e) {
+            $result->setSuccess(false)->setError($e);
+        }
+        return $result;
+    }
+
+    public function updateLiveLesson(User $user, LiveLesson $lesson, array $data) : LiveLessonResult {
+        $result = new LiveLessonResult();
+        try {
+            $lesson = $this->liveLessonProcessor->processUpdate($user, $lesson, $data);
+            $result->setSuccess(true)->setData($lesson);
+        } catch(EduException $e) {
+            $result->setSuccess(false)->setError($e);
+        }
+        return $result;
+    }
+
+    public function addLiveLessonMeetupUrl(User $user, LiveLesson $lesson, string $url) : LiveLessonResult {
+        $result = new LiveLessonResult();
+        try {
+            $lesson = $this->liveLessonProcessor->processUrlAddition($user, $lesson, $url);
+            $result->setSuccess(true)->setData($lesson);
+        } catch(EduException $e) {
+            $result->setSuccess(false)->setError($e);
+        }
+        return $result;
+    }
+
+    public function deleteLiveLesson(User $user, LiveLesson $lesson) : LiveLessonResult {
+        $result = new LiveLessonResult();
+        try {
+            $lesson = $this->liveLessonProcessor->processDeletion($user, $lesson);
             $result->setSuccess(true)->setData($lesson);
         } catch(EduException $e) {
             $result->setSuccess(false)->setError($e);
