@@ -4,7 +4,7 @@ namespace App\Command;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use App\Service\StudentGroupService;
+use App\Service\MessageService;
 use App\Entity\Picture;
 use App\Entity\StudentGroup;
 use App\Entity\GroupJoinRequest;
@@ -32,7 +32,7 @@ class TestCommand extends Command
     private $service;
     private $em;
 
-    public function __construct(StudentGroupService $service, EntityManagerInterface $em) {
+    public function __construct(MessageService $service, EntityManagerInterface $em) {
         $this->service = $service;
         $this->em = $em;
         parent::__construct();
@@ -49,25 +49,6 @@ class TestCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
 
-        $teacher = $this->em->getRepository(User::class)->findOneBy(['id' => 130]);
-
-        $users = [
-            $this->em->getRepository(User::class)->findOneBy(['id' => 137]),
-            $this->em->getRepository(User::class)->findOneBy(['id' => 138]),
-            $this->em->getRepository(User::class)->findOneBy(['id' => 139]),
-            $this->em->getRepository(User::class)->findOneBy(['id' => 140])
-        ];
-        $groups = [
-            $this->em->getRepository(StudentGroup::class)->findOneBy(['id' => 1]),
-            $this->em->getRepository(StudentGroup::class)->findOneBy(['id' => 2]),
-            $this->em->getRepository(StudentGroup::class)->findOneBy(['id' => 3]),
-        ];
-
-        $this->service->createLiveLesson($teacher, $groups[0], [
-            'title' => 'Hello, World xd',
-            'start' => new \DateTime('+7 days'),
-            'url' => null
-        ]);
         return 0;
     }
 }

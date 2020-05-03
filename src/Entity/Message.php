@@ -20,13 +20,13 @@ class Message
 
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\User", inversedBy="sentMessages")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(nullable=true)
      */
     private $sender;
 
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\User", inversedBy="messages")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(nullable=true)
      */
     private $reveiver;
 
