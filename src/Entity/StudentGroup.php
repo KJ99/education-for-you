@@ -71,12 +71,24 @@ class StudentGroup
      */
     private $liveLessons;
 
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\GroupInviteToken", mappedBy="studentGroup", orphanRemoval=true)
+     */
+    private $inviteTokens;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\GroupResource", mappedBy="studentGroup", orphanRemoval=true)
+     */
+    private $resources;
+
 
     public function __construct()
     {
         $this->students = new ArrayCollection();
         $this->joinRequests = new ArrayCollection();
         $this->liveLessons = new ArrayCollection();
+        $this->inviteTokens = new ArrayCollection();
+        $this->resources = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -250,6 +262,68 @@ class StudentGroup
             // set the owning side to null (unless already changed)
             if ($liveLesson->getStudentGroup() === $this) {
                 $liveLesson->setStudentGroup(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|GroupInviteToken[]
+     */
+    public function getInviteTokens(): Collection
+    {
+        return $this->inviteTokens;
+    }
+
+    public function addInviteToken(GroupInviteToken $inviteToken): self
+    {
+        if (!$this->inviteTokens->contains($inviteToken)) {
+            $this->inviteTokens[] = $inviteToken;
+            $inviteToken->setStudentGroup($this);
+        }
+
+        return $this;
+    }
+
+    public function removeInviteToken(GroupInviteToken $inviteToken): self
+    {
+        if ($this->inviteTokens->contains($inviteToken)) {
+            $this->inviteTokens->removeElement($inviteToken);
+            // set the owning side to null (unless already changed)
+            if ($inviteToken->getStudentGroup() === $this) {
+                $inviteToken->setStudentGroup(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|GroupResource[]
+     */
+    public function getResources(): Collection
+    {
+        return $this->resources;
+    }
+
+    public function addResource(GroupResource $resource): self
+    {
+        if (!$this->resources->contains($resource)) {
+            $this->resources[] = $resource;
+            $resource->setStudentGroup($this);
+        }
+
+        return $this;
+    }
+
+    public function removeResource(GroupResource $resource): self
+    {
+        if ($this->resources->contains($resource)) {
+            $this->resources->removeElement($resource);
+            // set the owning side to null (unless already changed)
+            if ($resource->getStudentGroup() === $this) {
+                $resource->setStudentGroup(null);
             }
         }
 
