@@ -208,18 +208,18 @@ class GroupJoinProcessor extends Processor {
     private function getJoinAttemptError(User $user, StudentGroup $group) : ?string {
         $error = null;
         $request = $this->em->getRepository(GroupJoinRequest::class)->findOneBy([
-            'studentGroup' => $group(),
+            'studentGroup' => $group,
             'user' => $user
         ]);
         if(!$user->isStudent()) {
             $error = 'access.denied';
-        } else if($group()->getTeacher()->getId() == $user->getId()) {
+        } else if($group->getTeacher()->getId() == $user->getId()) {
             $error = 'attempt.user.is.teacher';
-        } else if($group()->getStudents()->contains($user)) {
+        } else if($group->getStudents()->contains($user)) {
             $error = 'already.member';
         } else if($request != null) {
             $error = 'already.requested';
-        } else if($group()->getHidden()) {
+        } else if($group->getHidden()) {
             $error = 'group.private';
         }
         return $error;

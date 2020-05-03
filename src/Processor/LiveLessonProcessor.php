@@ -48,7 +48,7 @@ class LiveLessonProcessor extends Processor {
         return $liveLesson;
     } 
 
-    public function processUrlAddition(User $user, LiveLesson $liveLesson, string $url) {
+    public function processUrlAddition(User $user, LiveLesson $liveLesson, ?string $url) {
         if($liveLesson->getStudentGroup()->getTeacher()->getId() != $user->getId()) {
             throw new StudentGroupException('access.denied');
         }
@@ -127,6 +127,8 @@ class LiveLessonProcessor extends Processor {
         } else if(!array_key_exists('title', $data) || gettype($data['title']) != 'string' || strlen(trim($data['title'])) == 0) {
             $error = 'title.empty';
         } else if(!array_key_exists('start', $data) || !($data['start'] instanceof \DateTime)) {
+            $error = 'start.empty';
+        } else if($data['start']->getTimestamp() < strtotime('now')) {
             $error = 'start.empty';
         } else if(!array_key_exists('url', $data)) {
             $error = 'url.not.set';

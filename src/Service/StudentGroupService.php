@@ -7,6 +7,7 @@ use App\Entity\Level;
 use App\Entity\GroupJoinRequest;
 use App\Entity\GroupInviteToken;
 use App\Entity\LiveLesson;
+use App\Entity\GroupResource;
 
 use App\Result\StudentGroupResult;
 use App\Result\GroupRequestResult;
@@ -22,6 +23,7 @@ use App\Processor\GroupJoinProcessor;
 
 use App\Service\EntityService;
 use App\Service\PictureService;
+use App\Service\FileService;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -31,8 +33,8 @@ class StudentGroupService extends EntityService {
     private $joinProcessor;
     private $liveLessonProcessor;
 
-    public function __construct(EntityManagerInterface $em, PictureService $pictureService) {
-        $this->groupProcessor = new StudentGroupProcessor($em, $pictureService);
+    public function __construct(EntityManagerInterface $em, PictureService $pictureService, FileService $fileService) {
+        $this->groupProcessor = new StudentGroupProcessor($em, $pictureService, $fileService);
         $this->joinProcessor = new GroupJoinProcessor($em);
         $this->liveLessonProcessor = new LiveLessonProcessor($em);
         parent::__construct($em);
@@ -59,6 +61,50 @@ class StudentGroupService extends EntityService {
         }
         return $result;
     }
+
+    public function removeStudent(User $user, StudentGroup $group, User $student) : StudentGroupResult {
+        $result = new StudentGroupResult();
+        try {
+            $group = $this->groupProcessor->processStudentRemoval($user, $group, $student);
+            $result->setSuccess(true)->setData($group);
+        } catch(EduException $e) {
+            $result->setSuccess(false)->setError($e);
+        }
+        return $result;
+    }
+
+    public function leaveGroup(User $user, StudentGroup $group) : StudentGroupResult {
+        $result = new StudentGroupResult();
+        try {
+            $group = $this->groupProcessor->processGroupLeave($user, $group);
+            $result->setSuccess(true)->setData($group);
+        } catch(EduException $e) {
+            $result->setSuccess(false)->setError($e);
+        }
+        return $result;
+    }
+
+    public function addResource(User $user, StudentGroup $group, UploadedFile $file) : StudentGroupResult {
+        $result = new StudentGroupResult();
+        try {
+            $group = $this->groupProcessor->processResourceAddition($user, $group, $file);
+            $result->setSuccess(true)->setData($group);
+        } catch(EduException $e) {
+            $result->setSuccess(false)->setError($e);
+        }
+        return $result;
+    } 
+
+    public function removeResource(User $user, GroupResource $resource) : StudentGroupResult {
+        $result = new StudentGroupResult();
+        try {
+            $group = $this->groupProcessor->processResourceRemoval($user, $resource);
+            $result->setSuccess(true)->setData($group);
+        } catch(EduException $e) {
+            $result->setSuccess(false)->setError($e);
+        }
+        return $result;
+    } 
 
     public function delete(User $user, StudentGroup $group) : StudentGroupResult {
         $result = new StudentGroupResult();
@@ -170,7 +216,7 @@ class StudentGroupService extends EntityService {
         return $result;
     }
 
-    public function addLiveLessonMeetupUrl(User $user, LiveLesson $lesson, string $url) : LiveLessonResult {
+    public function addLiveLessonMeetupUrl(User $user, LiveLesson $lesson, ?string $url) : LiveLessonResult {
         $result = new LiveLessonResult();
         try {
             $lesson = $this->liveLessonProcessor->processUrlAddition($user, $lesson, $url);

@@ -5,9 +5,12 @@ use App\Entity\StudentGroup;
 use App\Entity\Level;
 use App\Entity\User;
 use App\Entity\Picture;
+use App\Entity\File;
+use App\Entity\GroupResource;
 
 use App\Result\StudentGroupResult;
 use App\Service\PictureService;
+use App\Service\FileService;
 use App\Exception\StudentGroupException;
 use App\Exception\DatabaseException;
 use App\Exception\EduException;
@@ -18,9 +21,11 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 class StudentGroupProcessor extends Processor {
         
     private $pictureService;
+    private $fileService;
 
-    public function __construct(EntityManagerInterface $em, PictureService $pictureService) {
+    public function __construct(EntityManagerInterface $em, PictureService $pictureService, FileService $fileService) {
         $this->pictureService = $pictureService;
+        $this->fileService = $fileService;
         parent::__construct($em);
     }
 
@@ -44,6 +49,54 @@ class StudentGroupProcessor extends Processor {
 
         if(!$saved) {
             $this->pictureService->deleteFile($avatar->getDirectory() . $avatar->getFileName());
+            throw new DatabaseException('save.failed');
+        }
+
+        return $group;
+    }
+
+    public function processResourceAddition(User $user, StudentGroup $group, UploadedFile $file) {
+        if($group->getTeacher()->getId() != $user->getId()) {
+            throw new StudentGroupException('access.denied');
+        }
+        $resourceResult = $this->fileService->resolveFile($file->getPathName(), $file->getClientOriginalName());
+        if(!$resourceResult->getSuccess()) {
+            throw $resourceResult->getError();
+        }
+        $resourceFile = $resourceResult->getData();
+        $resource = $this->buildResourceEntity($group, $resourceFile);
+        $this->em->persist($resourceFile);
+        $this->em->persist($resource);
+        
+        $group->addResource($resource);
+
+        $saved = $this->saveEntity($group);
+
+        if(!$saved) {
+            $this->fileService->deleteFile($resource->getDirectory() . $resource->getFileName());
+            throw new DatabaseException('save.failed');
+        }
+
+        return $group;
+    }
+
+    public function processResourceRemoval(User $user, GroupResource $resource) : StudentGroup {
+        $group = $resource->getStudentGroup();
+        if($group->getTeacher()->getId() != $user->getId()) {
+            throw new StudentGroupException('access.denied');
+        }
+        $filePath = $resource->getFile()->getDirectory() . $resource->getFile()->getFileName();
+
+        $group->removeResource($resource);
+        $this->em->persist($group);
+        $this->em->remove($resource);
+        $this->em->remove($resource->getFile());
+
+        $saved = $this->flushDatabase();
+
+        if($saved) {
+            $this->fileService->deleteFile($filePath);
+        } else {
             throw new DatabaseException('save.failed');
         }
 
@@ -83,10 +136,49 @@ class StudentGroupProcessor extends Processor {
         return $group;
     }
 
+    public function processStudentRemoval(User $user, StudentGroup $group, User $student) : StudentGroup {
+        if($group->getTeacher()->getId() != $user->getId()) {
+            throw new StudentGroupException('access.denied');
+        } else if($group->getTeacher()->getId() == $student->getId()) {
+            throw new StudentGroupException('cannot.remove.teacher');
+        }
+        $group->removeStudent($student);
+        $saved = $this->saveEntity($group);
+
+        if(!$saved) {
+            throw new DatabaseException('save.failed');
+        }
+
+        return $group;
+    }
+
+    public function processGroupLeave(User $user, StudentGroup $group) : StudentGroup {
+        if($group->getTeacher()->getId() == $user->getId()) {
+            throw new StudentGroupException('teacher.cannot.leave');
+        }
+
+        $group->removeStudent($user);
+        $saved = $this->saveEntity($group);
+
+        if(!$saved) {
+            throw new DatabaseException('save.failed');
+        }
+
+        return $group;
+    }
+
     public function processDeletion(User $user, StudentGroup $group) : StudentGroup {
         if($group->getTeacher()->getId() != $user->getId() && !$user->isAdmin()) {
             throw new StudentGroupException('access.denied');
+        }        
+        
+        $deleted = $this->deleteEntity($group);
+
+        if(!$deleted) {
+            throw new DatabaseException('delete.failed');
         }
+
+        return $group;
     }
 
     private function getDataValidationError(array $data, ?StudentGroup $current = null) : ?string {
@@ -99,7 +191,7 @@ class StudentGroupProcessor extends Processor {
             $level = $current->getLevel();
         }
 
-        $name = array_key_exists('name', $data) && gettype($data['name']) == 'string' ? $data['name'] : null;
+        $name = array_key_exists('name', $data) && gettype($data['name']) == 'string' ? trim($data['name']) : null;
         $groupWithSameName = $level != null && $name != null
             ? $this->em->getRepository(StudentGroup::class)->findOneBy(['level' => $level, 'name' => $name])
             : null;
@@ -136,6 +228,14 @@ class StudentGroupProcessor extends Processor {
         return $group;
     }
 
+    private function buildResourceEntity(StudentGroup $group, File $file) : GroupResource {
+        $resource = new GroupResource();
+        $resource
+            ->setStudentGroup($group)
+            ->setFile($file);
+        return $resource;
+    }
+
     private function updateEntitty(StudentGroup $group, array $data, ?Picture $newAvatar) : StudentGroup {
         $group
             ->setName(trim($data['name']))
@@ -161,4 +261,16 @@ class StudentGroupProcessor extends Processor {
         }
         return $result;
     }
+
+    private function flushDatabase() : bool {        
+        $result;
+        try {
+            $this->em->flush();
+            $result = true;
+        } catch(\Exception $e) {
+            $result = false;
+        }
+        return $result;
+    }
+    
 }

@@ -12,12 +12,12 @@ use App\Entity\GroupInviteToken;
 use App\Entity\Subject;
 use App\Entity\Message;
 use App\Entity\GroupMessage;
-use App\Service\MessageService;
 use App\Entity\File;
 use App\Entity\Level;
 use App\Entity\User;
 use App\Entity\Unit;
 use App\Entity\Lesson;
+use App\Entity\GroupResource;
 use App\Entity\LiveLesson;
 use App\Entity\LessonAttachment;
 use Doctrine\ORM\EntityManagerInterface;
@@ -32,7 +32,7 @@ class TestCommand extends Command
     private $service;
     private $em;
 
-    public function __construct(MessageService $service, EntityManagerInterface $em) {
+    public function __construct(StudentGroupService $service, EntityManagerInterface $em) {
         $this->service = $service;
         $this->em = $em;
         parent::__construct();
@@ -49,6 +49,25 @@ class TestCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
 
+        $teacher = $this->em->getRepository(User::class)->findOneBy(['id' => 130]);
+
+        $users = [
+            $this->em->getRepository(User::class)->findOneBy(['id' => 137]),
+            $this->em->getRepository(User::class)->findOneBy(['id' => 138]),
+            $this->em->getRepository(User::class)->findOneBy(['id' => 139]),
+            $this->em->getRepository(User::class)->findOneBy(['id' => 140])
+        ];
+        $groups = [
+            $this->em->getRepository(StudentGroup::class)->findOneBy(['id' => 1]),
+            $this->em->getRepository(StudentGroup::class)->findOneBy(['id' => 2]),
+            $this->em->getRepository(StudentGroup::class)->findOneBy(['id' => 3]),
+        ];
+
+        $this->service->createLiveLesson($teacher, $groups[0], [
+            'title' => 'Hello, World xd',
+            'start' => new \DateTime('+7 days'),
+            'url' => null
+        ]);
         return 0;
     }
 }
