@@ -105,6 +105,11 @@ class User implements UserInterface
      */
     private $groupJoinRequests;
 
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\SystemMessage", mappedBy="receiver")
+     */
+    private $systemMessages;
+
     public function __construct()
     {
         $this->tokens = new ArrayCollection();
@@ -116,6 +121,7 @@ class User implements UserInterface
         $this->taughtGroups = new ArrayCollection();
         $this->studentGroups = new ArrayCollection();
         $this->groupJoinRequests = new ArrayCollection();
+        $this->systemMessages = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -532,5 +538,36 @@ class User implements UserInterface
 
     public function isCoordinatorOfSubject(Subject $subject) {
         return $this->getCoordinatedSubjects()->contains($subject);
+    }
+
+    /**
+     * @return Collection|SystemMessage[]
+     */
+    public function getSystemMessages(): Collection
+    {
+        return $this->systemMessages;
+    }
+
+    public function addSystemMessage(SystemMessage $systemMessage): self
+    {
+        if (!$this->systemMessages->contains($systemMessage)) {
+            $this->systemMessages[] = $systemMessage;
+            $systemMessage->setReceiver($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSystemMessage(SystemMessage $systemMessage): self
+    {
+        if ($this->systemMessages->contains($systemMessage)) {
+            $this->systemMessages->removeElement($systemMessage);
+            // set the owning side to null (unless already changed)
+            if ($systemMessage->getReceiver() === $this) {
+                $systemMessage->setReceiver(null);
+            }
+        }
+
+        return $this;
     }
 }

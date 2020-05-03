@@ -4,6 +4,9 @@ namespace App\Processor;
 use App\Entity\StudentGroup;
 use App\Entity\User;
 use App\Entity\File;
+use App\Entity\Message;
+use App\Entity\GroupMessage;
+use App\Entity\SystemMessage;
 
 use App\Service\FileService;
 use App\Exception\MessageException;
@@ -21,6 +24,4 @@ class MessageProcessor extends Processor {
         $this->fileService = $fileService;
         parent::__construct($em);
     }
-
-    
 }
