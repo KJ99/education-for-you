@@ -29,5 +29,36 @@ class MessageService extends EntityService {
         parent::__construct($em);
     }
 
-    
+    public function sendDirectMessage(User $user, User $receiver, array $data) : MessageResult {
+        $result = new MessageResult();
+        try {
+            $message = $this->processor->processDirectMessageCreation($user, $receiver, $data);
+            $result->setSuccess(true)->setData($message);
+        } catch(EduException $e) {
+            $result->setSuccess(false)->setError($e);
+        }
+        return $result;
+    }
+
+    public function sendGroupMessage(User $user, StudentGroup $group, array $data) : GroupMessageResult{
+        $result = new GroupMessageResult();
+        try {
+            $message = $this->processor->processGroupMessageCreation($user, $group, $data);
+            $result->setSuccess(true)->setData($message);
+        } catch(EduException $e) {
+            $result->setSuccess(false)->setError($e);
+        }
+        return $result;
+    }
+
+    public function sendSystemMessage(User $receiver, array $data) : SystemMessageResult {
+        $result = new SystemMessageResult();
+        try {
+            $message = $this->processor->processSystenMessageCreation($receiver, $data);
+            $result->setSuccess(true)->setData($message);
+        } catch(EduException $e) {
+            $result->setSuccess(false)->setError($e);
+        }
+        return $result;
+    }
 }

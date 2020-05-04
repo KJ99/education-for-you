@@ -417,6 +417,9 @@ class LessonProcessor extends Processor {
             if($file instanceof UploadedFile) {
                 $result = $this->fileService->resolveFile($file->getPathName(), $file->getClientOriginalName());
                 if(!$result->getSuccess()) {
+                    foreach($attachments as $attachment) {
+                        $this->fileService->deleteFile($attachment->getDirectory() . $attachment->getFileName());
+                    }
                     throw $result->getError();
                 }
                 $attachments[] = $result->getData();
