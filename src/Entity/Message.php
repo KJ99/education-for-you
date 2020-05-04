@@ -20,15 +20,15 @@ class Message
 
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\User", inversedBy="sentMessages")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(nullable=true)
      */
     private $sender;
 
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\User", inversedBy="messages")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(nullable=true)
      */
-    private $reveiver;
+    private $receiver;
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -41,11 +41,6 @@ class Message
     private $content;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
-     */
-    private $signature;
-
-    /**
      * @ORM\Column(type="datetime")
      */
     private $sentDate;
@@ -53,7 +48,7 @@ class Message
     /**
      * @ORM\Column(type="boolean")
      */
-    private $seen;
+    private $seen = false;
 
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\MessageAttachment", mappedBy="message", orphanRemoval=true)
@@ -82,14 +77,14 @@ class Message
         return $this;
     }
 
-    public function getReveiver(): ?User
+    public function getReceiver(): ?User
     {
-        return $this->reveiver;
+        return $this->receiver;
     }
 
-    public function setReveiver(?User $reveiver): self
+    public function setReceiver(?User $receiver): self
     {
-        $this->reveiver = $reveiver;
+        $this->receiver = $receiver;
 
         return $this;
     }
