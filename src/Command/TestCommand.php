@@ -4,13 +4,13 @@ namespace App\Command;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use App\Service\MessageService;
+use App\Service\MailerService;
 use App\Entity\Picture;
 use App\Entity\StudentGroup;
 use App\Entity\GroupJoinRequest;
 use App\Entity\GroupInviteToken;
 use App\Entity\Subject;
-use App\Entity\Message;
+use App\Entity\Contributor;
 use App\Entity\GroupMessage;
 use App\Entity\File;
 use App\Entity\Level;
@@ -32,7 +32,7 @@ class TestCommand extends Command
     private $service;
     private $em;
 
-    public function __construct(MessageService $service, EntityManagerInterface $em) {
+    public function __construct(MailerService $service, EntityManagerInterface $em) {
         $this->service = $service;
         $this->em = $em;
         parent::__construct();
@@ -48,7 +48,7 @@ class TestCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-
+        $this->service->sendTestMail();
         return 0;
     }
 }
