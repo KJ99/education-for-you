@@ -4,7 +4,7 @@ namespace App\Command;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use App\Service\MailerService;
+use App\Service\SubjectService;
 use App\Entity\Picture;
 use App\Entity\StudentGroup;
 use App\Entity\GroupJoinRequest;
@@ -32,7 +32,7 @@ class TestCommand extends Command
     private $service;
     private $em;
 
-    public function __construct(MailerService $service, EntityManagerInterface $em) {
+    public function __construct(SubjectService $service, EntityManagerInterface $em) {
         $this->service = $service;
         $this->em = $em;
         parent::__construct();
@@ -48,7 +48,9 @@ class TestCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->service->sendTestMail();
+        $user = $this->em->getRepository(User::class)->findOneBy(['id' => 130]);
+        $subject = $this->em->getRepository(Subject::class)->findOneBy(['id' => 62]);
+
         return 0;
     }
 }
